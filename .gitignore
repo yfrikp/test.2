@@ -1,0 +1,27 @@
+# ROS2 / colcon 构建产物（自动生成，不需要提交）
+build/
+install/
+log/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python 虚拟环境
+.venv/
+venv/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 仿真日志与临时文件
+*.log
+*.csv.bak

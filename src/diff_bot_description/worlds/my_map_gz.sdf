@@ -1,0 +1,245 @@
+<?xml version="1.0" ?>
+<!-- ==========================================================================
+     my_map_gz.sdf —— **你自己做的地图**，Gazebo Sim（新版）专用版
+
+     ★ 本文件由 build_my_map.py 从 test.2.fixed.world 自动生成 ★
+       障碍几何是从你的地图里**原样搬过来**的，你的设计没有被改动。
+
+     【你的地图设计】
+       center_block   中间一根 1.4x0.3 的斜挡墙（旋转 0.6 弧度）
+                      —— 正好挡住 A→B 的直线，逼着规划器绕路
+       corner_c1~c4   四角 4 个半径 0.28 的圆柱
+       wall_*         四面围墙（±3.2）
+       point_A/B      绿/红标记柱（故意不写 collision，雷达看不见）
+
+     【和你的原文件差在哪，以及为什么】
+       1) 去掉了 <physics type="ode">
+          Classic 用 ODE，新版 Gazebo Sim 内置 DART，不认 ode 这套参数。
+          新版只需要步长和实时率。
+       2) 去掉了 <include>model://sun</include> 和 model://ground_plane
+          新版**没有 model:// 模型库**，必须把太阳和地面直接写出来。
+       3) 加上了 4 个系统插件 ★ 这是最关键的
+          新版是"微内核 + 插件"架构，不加载系统就什么都没有：
+             Physics           —— 不加载就完全没有物理，车不会动
+             UserCommands      —— 不加载就没法用 ros_gz_sim create 生成小车
+             SceneBroadcaster  —— 不加载 GUI/RViz 里看不到东西
+             Sensors           —— ★ 不加载**雷达完全不出数据**（题目3、4 直接废）
+          而且 Sensors 必须指定 render_engine = ogre2，雷达靠它做光线投射。
+       4) 世界名定为 obstacles
+           gz_sim.launch.py 里有 3 处硬编码这个名字（生成小车、真值桥接），
+          保持一致才能让现有 launch 一个字都不改就用上你的地图。
+     ========================================================================== -->
+<sdf version="1.8">
+  <world name="obstacles">
+
+    <!-- ============ 物理参数（新版用内置 DART，type 写 ignored 即可）============ -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- ============ Gazebo Sim 必需的系统插件 ============ -->
+    <plugin filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <!-- ★ 雷达靠这个系统工作，render_engine 必须是 ogre2 -->
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- ============ 光照（新版没有 model://sun，直接写）============ -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ============ 地面（新版没有 model://ground_plane，直接建）============ -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================= 以下模型从你的 test.2.fixed.world 原样搬来 ================= -->
+
+    <model name="point_A">
+      <static>true</static>
+      <pose>-2.0 -2.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <cylinder><radius>0.06</radius><length>1.0</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="point_B">
+      <static>true</static>
+      <pose>2.0 2.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <cylinder><radius>0.06</radius><length>1.0</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="center_block">
+      <static>true</static>
+      <pose>0.0 0.0 0.3 0 0 0.6</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>1.4 0.3 0.6</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.4 0.3 0.6</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="corner_c1">
+      <static>true</static>
+      <pose>-1.2 1.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="corner_c2">
+      <static>true</static>
+      <pose>1.2 1.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="corner_c3">
+      <static>true</static>
+      <pose>-1.2 -1.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="corner_c4">
+      <static>true</static>
+      <pose>1.2 -1.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.28</radius><length>0.8</length></cylinder></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0.0 3.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.6 0.1 0.8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>6.6 0.1 0.8</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_south">
+      <static>true</static>
+      <pose>0.0 -3.2 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.6 0.1 0.8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>6.6 0.1 0.8</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_east">
+      <static>true</static>
+      <pose>3.2 0.0 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.6 0.8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 6.6 0.8</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-3.2 0.0 0.4 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.6 0.8</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 6.6 0.8</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

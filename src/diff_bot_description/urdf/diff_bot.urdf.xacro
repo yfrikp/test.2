@@ -1,0 +1,290 @@
+<?xml version="1.0"?>
+<robot name="diff_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="sim" default="classic"/>
+  <xacro:property name="sim" value="$(arg sim)"/>
+  <xacro:property name="chassis_len"   value="0.30"/>
+  <xacro:property name="chassis_wid"   value="0.24"/>
+  <xacro:property name="chassis_hgt"   value="0.10"/>
+  <xacro:property name="chassis_mass"  value="3.0"/>
+  <xacro:property name="wheel_rad"     value="0.05"/>
+  <xacro:property name="wheel_wid"     value="0.03"/>
+  <xacro:property name="wheel_mass"    value="0.2"/>
+  <xacro:property name="wheel_sep"     value="0.26"/>
+  <xacro:property name="caster_rad"    value="0.02"/>
+  <xacro:property name="caster_mass"   value="0.1"/>
+  <xacro:property name="laser_size"    value="0.04"/>
+  <xacro:property name="laser_mass"    value="0.05"/>
+  <xacro:property name="laser_height"  value="0.14"/>
+  <material name="grey">  <color rgba="0.55 0.55 0.58 1.0"/></material>
+  <material name="black"> <color rgba="0.10 0.10 0.10 1.0"/></material>
+  <material name="red">   <color rgba="0.85 0.15 0.15 1.0"/></material>
+  <material name="blue">  <color rgba="0.15 0.25 0.85 1.0"/></material>
+  <xacro:macro name="box_inertia" params="m l w h">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(h*h+w*w)/12.0}" ixy="0" ixz="0"
+               iyy="${m*(l*l+h*h)/12.0}" iyz="0"
+               izz="${m*(l*l+w*w)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+  <xacro:macro name="cyl_inertia" params="m r h">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+h*h)/12.0}" ixy="0" ixz="0"
+               iyy="${m*r*r/2.0}"          iyz="0"
+               izz="${m*(3*r*r+h*h)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ==========================================================================
+       base_footprint：车在地面的投影，固定关节连到 base_link
+       为什么要有它：SLAM / Nav2 期望机器人"脚"在地面上，z=0
+       ========================================================================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <!-- 抬高半个车高 + 半个轮径，让车体坐上轮子 -->
+    <origin xyz="0 0 ${wheel_rad + chassis_hgt/2}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==========================================================================
+       base_link：车体
+       ========================================================================== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${chassis_len} ${chassis_wid} ${chassis_hgt}"/></geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${chassis_len} ${chassis_wid} ${chassis_hgt}"/></geometry>
+    </collision>
+    <xacro:box_inertia m="${chassis_mass}" l="${chassis_len}" w="${chassis_wid}" h="${chassis_hgt}"/>
+  </link>
+
+  <!-- 一个方向标记（小红块），方便在 Gazebo/RViz 里看出车头朝向 -->
+  <joint name="nose_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="nose_link"/>
+    <origin xyz="${chassis_len/2} 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="nose_link">
+    <visual>
+      <geometry><box size="0.03 0.06 0.03"/></geometry>
+      <material name="red"/>
+    </visual>
+    <!-- 必须补 collision，否则 Gazebo 会警告 "link has no collision"，
+         而且它在物理世界里会变成一个"幽灵"（能被雷达打到但不会碰撞） -->
+    <collision>
+      <geometry><box size="0.03 0.06 0.03"/></geometry>
+    </collision>
+    <!-- 也必须补惯性，否则 Gazebo 会用默认质量，行为不可预期 -->
+    <xacro:box_inertia m="0.02" l="0.03" w="0.06" h="0.03"/>
+  </link>
+  <xacro:macro name="drive_wheel" params="prefix y_sign color">
+    <link name="${prefix}_wheel_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_rad}" length="${wheel_wid}"/></geometry>
+        <material name="${color}"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_rad}" length="${wheel_wid}"/></geometry>
+      </collision>
+      <xacro:cyl_inertia m="${wheel_mass}" r="${wheel_rad}" h="${wheel_wid}"/>
+    </link>
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${prefix}_wheel_link"/>
+      <origin xyz="0 ${y_sign*wheel_sep/2} ${-chassis_hgt/2}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="20" velocity="20"/>
+      <dynamics damping="0.1" friction="0.1"/>
+    </joint>
+  </xacro:macro>
+  <xacro:drive_wheel prefix="left"  y_sign="1"  color="black"/>
+  <xacro:drive_wheel prefix="right" y_sign="-1" color="black"/>
+  <link name="caster_link">
+    <visual>
+      <geometry><sphere radius="${caster_rad}"/></geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <geometry><sphere radius="${caster_rad}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="${caster_mass}"/>
+      <inertia ixx="${2*caster_mass*caster_rad*caster_rad/5.0}" ixy="0" ixz="0"
+               iyy="${2*caster_mass*caster_rad*caster_rad/5.0}" iyz="0"
+               izz="${2*caster_mass*caster_rad*caster_rad/5.0}"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="caster_link"/>
+    <origin xyz="${-chassis_len/2 + 0.02} 0 ${-chassis_hgt/2 - wheel_rad + caster_rad}" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1" velocity="20"/>
+  </joint>
+  <gazebo reference="caster_link">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
+  </gazebo>
+  <gazebo reference="left_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <gazebo reference="right_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <link name="laser_link">
+    <visual>
+      <geometry><cylinder radius="${laser_size}" length="${laser_size}"/></geometry>
+      <material name="red"/>
+    </visual>
+    <xacro:cyl_inertia m="${laser_mass}" r="${laser_size}" h="${laser_size}"/>
+  </link>
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="laser_link"/>
+    <origin xyz="${chassis_len/2 - 0.05} 0 ${chassis_hgt/2 + laser_height}" rpy="0 0 0"/>
+  </joint>
+  <xacro:if value="${sim == 'classic'}">
+  <gazebo>
+    <plugin filename="libgazebo_ros_diff_drive.so" name="diff_drive">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <update_rate>100</update_rate>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${wheel_sep}</wheel_separation>
+      <wheel_diameter>${wheel_rad*2}</wheel_diameter>
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+  <xacro:if value="${sim == 'gz'}">
+  <gazebo>
+    <plugin filename="ignition-gazebo-diff-drive-system"
+            name="ignition::gazebo::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${wheel_sep}</wheel_separation>
+      <wheel_radius>${wheel_rad}</wheel_radius>
+      <max_linear_acceleration>1.0</max_linear_acceleration>
+      <min_linear_acceleration>-1.0</min_linear_acceleration>
+      <max_angular_acceleration>2.0</max_angular_acceleration>
+      <min_angular_acceleration>-2.0</min_angular_acceleration>
+      <max_linear_velocity>0.5</max_linear_velocity>
+      <min_linear_velocity>-0.5</min_linear_velocity>
+      <max_angular_velocity>2.0</max_angular_velocity>
+      <min_angular_velocity>-2.0</min_angular_velocity>
+      <topic>/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <tf_topic>/tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+  <xacro:if value="${sim == 'classic'}">
+  <gazebo reference="laser_link">
+    <sensor name="laser" type="ray">
+      <always_on>true</always_on>
+      <update_rate>20</update_rate>
+      <visualize>true</visualize>
+      <pose>0 0 0 0 0 0</pose>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1.0</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.20</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+
+      <plugin filename="libgazebo_ros_ray_sensor.so" name="laser_controller">
+        <ros>
+          <namespace>/</namespace>
+          <!-- 输出 LaserScan 到 /scan —— 建图和 Nav2 默认就找这个话题 -->
+          <remapping>~/out:=scan</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>laser_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+  </xacro:if>
+  <xacro:if value="${sim == 'gz'}">
+  <gazebo reference="laser_link">
+    <sensor name="laser" type="gpu_lidar">
+      <topic>/scan</topic>
+      <always_on>true</always_on>
+      <update_rate>20</update_rate>
+      <visualize>true</visualize>
+      <pose>0 0 0 0 0 0</pose>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.30</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+  </xacro:if>
+  <xacro:if value="${sim == 'gz'}">
+  <gazebo>
+    <plugin filename="ignition-gazebo-joint-state-publisher-system"
+            name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+    </plugin>
+  </gazebo>
+  </xacro:if>
+</robot>
