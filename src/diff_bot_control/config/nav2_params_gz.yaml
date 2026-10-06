@@ -1,68 +1,6 @@
-# ★ 本文件由 make_nav2_gz.py 从 nav2_params.yaml 自动生成，请勿手工编辑 ★
-#   唯一差别：amcl.initial_pose 改成了 (0,0,0)，以适配 Gazebo Sim 的 map 坐标系。
-#   要改参数请改 nav2_params.yaml，然后重新运行 make_nav2_gz.py。
-# =============================================================================
-#  nav2_params.yaml —— 题目(4) 附加题：用雷达导航到任意点
-# =============================================================================
-#  【Nav2 是什么】
-#  Nav2 = ROS2 的导航框架。它不是"一个算法"，而是**一整套协作的模块**。
-#  题目(2) 你自己写了 A* + Pure Pursuit；Nav2 干的是同一件事，
-#  但工程化得多：代价地图、回环规划、恢复行为、生命周期管理全都有。
-#
-#  【三层架构（这是理解 Nav2 的关键）】
-#
-#    ① 定位层 —— "我在哪？"
-#         amcl        : 粒子滤波定位。拿地图 + 雷达 + 里程计，算出 map→odom 变换
-#         map_server  : 提供题目(3) 建好的静态地图
-#
-#    ② 规划层 —— "该走哪条路？"
-#         planner_server : 在**全局代价地图**上做全局路径规划（本配置用 NavFn/A*）
-#         smoother_server: 把规划出的折线平滑成可跟踪的曲线
-#
-#    ③ 控制层 —— "现在轮子该怎么转？"
-#         controller_server : 在**局部代价地图**上算速度指令（本配置用 DWB）
-#         behavior_server   : 卡住时的恢复动作（原地转、后退、等待）
-#
-#    还有两个：
-#         bt_navigator    : 用**行为树**把上面这些串起来（先规划→再跟踪→失败就恢复）
-#         lifecycle_manager: 统一管理所有节点的生命周期（配置→激活→关闭）
-#
-#  【代价地图（Costmap）—— 最重要也最容易搞混的概念】
-#  它把"障碍"变成一张**代价图**：0=畅通，254=必撞，中间是"越靠近障碍代价越高"。
-#  规划器就在这张代价图上找"总代价最低"的路径 —— 所以路径会**自然远离障碍**，
-#  而不是贴着障碍走。这是 Nav2 比你手写的 A* 更"聪明"的地方。
-#
-#  全局 vs 局部：
-#      全局代价地图(global_costmap)：覆盖整张地图，用**静态地图 + 雷达**，
-#                                    固定坐标系 map，用来做全局规划
-#      局部代价地图(local_costmap) ：只覆盖小车周围一小块（rolling_window），
-#                                    固定坐标系 odom，用来实时避障
-#  为什么局部要用 odom？因为避障要**快速反应**，而 map→odom 的修正有延迟，
-#  用 odom 能保证"障碍在哪"这件事是即时准确的。
-#
-#  【本文件相对官方模板改了什么】（★ 标记处）
-#      1) amcl 激光量程 100 → 12（匹配我们的雷达）
-#      2) amcl 增加初始位姿（让 AMCL 一启动就知道车在 A 点，不用手动给初值）
-#      3) 速度上限 0.26 → 0.22（小车 + 小场地，稳一点）
-#      4) 膨胀半径 0.55 → 0.35（6.4m 的小房间里 0.55 会把通道堵死）
-#      5) 局部代价地图窗口 3x3 → 4x4（多一点前瞻）
-# =============================================================================
-
-# =============================================================================
-#  定位层 ①：AMCL —— 蒙特卡洛粒子滤波定位
-# =============================================================================
-#  原理（一句话）：撒一把"猜测点"（粒子），每个粒子代表"我可能在这"。
-#    1) 预测：车动了，按里程计把所有粒子一起挪
-#    2) 更新：拿每个粒子位置应该看到的雷达数据，和**实际**雷达数据比对，
-#             像的粒子权重高，不像的权重低
-#    3) 重采样：按权重重新撒粒子，权重高的附近撒得多
-#  粒子群会逐渐收敛到真实位置。这就是"用雷达在地图里找到自己"。
 amcl:
   ros__parameters:
     use_sim_time: True
-    # 运动噪声模型（alpha1~alpha5）：越大越不信任里程计，粒子撒得越散。
-    # 仿真里里程计很准，理论上可以调小；但太小会让 AMCL 收敛太慢，
-    # 保持官方默认 0.2 比较稳。
     alpha1: 0.2
     alpha2: 0.2
     alpha3: 0.2
@@ -77,9 +15,6 @@ amcl:
     do_beamskip: false
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
-    # ★ 改动 1：雷达量程匹配（Gazebo Sim 版雷达是 0.30~12.0 m）
-    #   下限为什么是 0.30 而不是 0.10：见 diff_bot.urdf.xacro 里 range_min 的说明 ——
-    #   新版仿真器里车体自反射出现在 0.21m 左右，用 0.20 会漏进来变成"车自己挡自己"。
     laser_max_range: 12.0
     laser_min_range: 0.30
     laser_model_type: "likelihood_field"
@@ -88,27 +23,14 @@ amcl:
     min_particles: 800
     pf_err: 0.05
     pf_z: 0.99
-    # ★★★ 实测关键修复：打开 AMCL 的"迷路自救"机制 ★★★
-    #   这两个参数是"增强型 MCL(augmented MCL)"的随机粒子注入率：
-    #       slow：长期平均匹配度差 → 缓慢注入随机粒子（防止越走越偏）
-    #       fast：短期匹配度突然变差 → 快速注入随机粒子（防止一下子跟丢）
-    #   官方 Nav2 模板把它们设成 0.0，等于**把自救机制关掉了** ——
-    #   一旦粒子群收敛到错误位置就永远出不来。
-    #   实测症状：AMCL 误差会累积到 0.34m（车离墙只有 0.6m、robot_radius 只有 0.22m），
-    #   于是全局代价地图里"车所在的格"落进墙的致命区
-    #   → 规划器报 "failed to create plan" → 目标失败。
-    #   这正是"单个目标能成功、连续导航越来越差"的根因。
     recovery_alpha_slow: 0.001
     recovery_alpha_fast: 0.1
     resample_interval: 1
-    # 差速运动模型（我们的车就是差速的）
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
     transform_tolerance: 1.0
-    # ★ 更频繁地做定位更新（官方 0.2/0.25 太稀疏）。
-    #   我们的雷达有 720 线、20Hz，小车又走得慢，加密更新能明显减小漂移。
     update_min_a: 0.10
     update_min_d: 0.10
     z_hit: 0.5
@@ -116,37 +38,13 @@ amcl:
     z_rand: 0.5
     z_short: 0.05
     scan_topic: scan
-    # ★ 改动 2：给 AMCL 一个初始猜测 = 小车出生点 A(-2,-2)，朝向 45°。
-    #   为什么需要：AMCL 是"从猜测出发逐步收敛"的，如果不给初值，
-    #   它会默认从 (0,0,0) 开始撒粒子 —— 而车实际在 (-2,-2)，
-    #   粒子可能要很久才收敛，甚至收敛到错误位置。
-    #   真实场景里这个初值由"开机时人在哪"告诉它（RViz 里点 2D Pose Estimate）。
     set_initial_pose: true
     always_reset_initial_pose: false
     initial_pose:
-      # ★ Gazebo Sim 专用：SLAM 的 map 帧锚定在机器人起始位姿上，
-      #   所以起点就是 map 的原点 (0,0)，朝向 0。
-      #   （Classic 版这里是 -2.0 / -2.0 / 0.785，因为那边 map 帧与世界对齐）
       x: 0.0
       y: 0.0
       z: 0.0
       yaw: 0.0
-
-# =============================================================================
-#  bt_navigator：行为树导航器
-# =============================================================================
-#  原理：把"导航"这件事写成一棵**行为树**（Behavior Tree），
-#  而不是一大坨 if-else。默认树长这样（navigate_to_pose_w_replanning_and_recovery）：
-#
-#      Sequence
-#        ├── RateController(1Hz) → ComputePathToPose   （持续重规划）
-#        ├── FollowPath                                 （跟踪路径）
-#        └── RecoveryFallback                           （失败了怎么办）
-#              ├── ClearCostmap
-#              ├── Spin（原地转一圈找路）
-#              └── BackUp（后退）
-#
-#  plugin_lib_names 就是这棵树能用的"积木"清单，必须和安装的 Nav2 版本匹配。
 bt_navigator:
   ros__parameters:
     use_sim_time: True
@@ -204,29 +102,12 @@ bt_navigator:
       - nav2_assisted_teleop_cancel_bt_node
       - nav2_drive_on_heading_cancel_bt_node
       - nav2_is_battery_charging_condition_bt_node
-
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
     use_sim_time: True
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
     use_sim_time: True
-
-# =============================================================================
-#  控制层 ③：controller_server —— 局部规划 / 速度指令生成
-# =============================================================================
-#  ★ 本配置用的是 **DWB (DWA 的 ROS2 改进版)**：
-#      动态窗口法 —— 在 (v, ω) 速度空间里采样一堆候选速度，
-#      对每个候选**向前仿真**一段时间，打分（离障碍近不近、贴不贴路径、朝不朝向目标），
-#      选分数最高的那组速度发出去。这就是"实时避障"的本质。
-#
-#      critics 就是打分函数：
-#        BaseObstacle : 撞障碍要重罚
-#        PathAlign    : 车头要顺着路径方向
-#        PathDist     : 要贴着路径走
-#        GoalDist     : 要靠近目标
-#        RotateToGoal : 到终点了要转正朝向
-#        Oscillation  : 反复左右横跳要罚（防"画龙"）
 controller_server:
   ros__parameters:
     use_sim_time: True
@@ -238,112 +119,40 @@ controller_server:
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
-
-    # 进度检查：多长时间内必须移动多远，否则判定"卡住了"。
-    # ★ 实测教训：官方默认是 0.5m / 10s（= 平均 0.05 m/s），那是给 TurtleBot3
-    #   在较大场地里用的。我们的小车 max_vel_x 只有 0.22 m/s，还要频繁转弯
-    #   （转弯时平移速度接近 0），实测平均速度经常刚好在 0.05 m/s 上下 ——
-    #   于是被**误判为卡住**，反复触发恢复行为，反而更慢，形成恶性循环。
-    #   改成 0.15m / 15s（= 0.01 m/s），只拦真正的"完全不动"。
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
       required_movement_radius: 0.15
       movement_time_allowance: 15.0
-
-    # 目标判定容差：到这个范围内就算"到达"
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      # ★ 改动 6：0.20 → 0.25。贴墙目标处 DWB 常常差几厘米对不准，
-      #   容差太小会让它反复微调直到"无法前进"而被判定失败。
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
-
     FollowPath:
-      # ★★★ 改用 RPP（Regulated Pure Pursuit）而不是 DWB ★★★
-      #
-      # 【为什么换 —— 这是实测后的决定，不是随便换】
-      #   DWB 的思路是"在 (v, ω) 速度空间采样一堆候选、逐条向前仿真、再打分选最优"。
-      #   它很强，但代价是每周期要算几百上千条轨迹。实测中它反复出现两类失败：
-      #       DWBLocalPlanner: No valid trajectories out of 1229!
-      #       BaseObstacle/Trajectory Hits Obstacle.
-      #       controller_server: Failed to make progress
-      #   表现为 cmd_vel 时有时无、车"一顿一顿"、平均速度掉到 0.05 m/s，
-      #   最后被 progress_checker 判定卡住 → 触发恢复行为 → 更慢，恶性循环。
-      #
-      #   RPP 是**解析式**的，完全不做采样：
-      #       1) 在全局路径上找"预瞄点"—— 距车 lookahead_dist 的那个点
-      #       2) 用曲率公式直接算该用多大角速度转向：
-      #              κ = 2·y / (x² + y²)     （(x,y) 是预瞄点在车身坐标系的位置）
-      #              ω = v · κ
-      #       3) 再按"弯有多急"和"离障碍多近"**反过来限制线速度**（这就是 regulated）
-      #   → 计算量恒定且极小，**不存在"采样全废"这种失败模式**。
-      #
-      # 【教学上的好处】
-      #   这**就是你在题目(2) 亲手实现并验证成功的 Pure Pursuit**！
-      #   官方版只多了两个"调节"（regulated）：
-      #       · 曲率限速：转弯越急自动走越慢，防止高速甩出去
-      #       · 代价限速：离障碍越近代价越高自动减速，防止擦碰
-      #   所以从题目(2) 到题目(4)，你用的其实是同一个算法，只是从"自己写"
-      #   变成了"用官方工程化实现，并接上代价地图和恢复行为"。
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-
-      # 期望巡航速度：和题目(2) path_follower 的 v_max 一致，便于对照
       desired_linear_vel: 0.22
-      # 预瞄距离：和题目(2) 的 lookahead=0.45 完全一致
       lookahead_dist: 0.45
       min_lookahead_dist: 0.25
       max_lookahead_dist: 0.90
       lookahead_time: 1.5
-      # 自适应预瞄：L = v · lookahead_time，走得快就看得远（更稳）
       use_velocity_scaled_lookahead_dist: true
-
       transform_tolerance: 0.2
-
-      # ---- 接近终点时线性减速（和题目(2) 的 slow_radius 是同一个思路）----
       min_approach_linear_velocity: 0.05
       approach_velocity_scaling_dist: 0.60
-
-      # ---- 碰撞预测：向前推演 1 秒，若会撞上代价地图里的障碍就减速/停 ----
-      # ★ 实测教训：**关掉**。开着时它预测到"未来 1 秒内可能碰到"就直接让
-      #   computeVelocityCommands 抛异常 → 控制器连续失败 →
-      #   controller_server 报 "Controller patience exceeded" → 目标失败。
-      #   我们的环境是**静态且已完整建图**的，全局路径本身就由静态地图保证不碰撞；
-      #   局部实时避障由局部代价地图 + 速度调节负责。
-      #   环境里出现地图上没有的移动障碍时，再把它打开。
       use_collision_detection: false
       max_allowed_time_to_collision_up_to_carrot: 1.0
-
-      # ---- 曲率限速：转弯越急走得越慢 ----
       use_regulated_linear_velocity_scaling: true
       regulated_linear_scaling_min_radius: 0.90
       regulated_linear_scaling_min_speed: 0.05
-
-      # ---- 代价限速 ----
-      # ★ 实测教训：**关掉**。它让"离膨胀区越近走得越慢"，而 cost_scaling_dist=0.30
-      #   意味着只要离膨胀区 0.3m 以内就减速。这个房间只有 6.4m 见方、
-      #   墙的膨胀半径 0.35m，车在房间里**几乎时刻都处在减速区** ——
-      #   结果全程以 0.05 m/s 爬行，进而在 15 秒内走不到 0.15m 而被判"没进展"。
-      #   曲率限速（上面那条）已经足够防止转弯甩出去；
-      #   离障碍太近时靠局部代价地图 + 恢复行为兜底。
       use_cost_regulated_linear_velocity_scaling: false
       cost_scaling_dist: 0.30
       cost_scaling_gain: 1.0
       inflation_cost_scaling_factor: 3.0
-
-      # ---- 朝向误差大时先原地转向（差速车的优势，比画大弧线安全）----
-      # ★ 注意：use_rotate_to_heading 与 allow_reversing **不能同时为 true**
-      #   （库里的报错原文："Both use_rotate_to_heading and allow_reversing
-      #     parameter cannot be set to true"）。我们选"原地转向"。
       use_rotate_to_heading: true
-      rotate_to_heading_min_angle: 0.785     # 误差 > 45° 就原地转
+      rotate_to_heading_min_angle: 0.785
       rotate_to_heading_angular_vel: 1.0
       max_angular_accel: 3.2
       allow_reversing: false
-
-# =============================================================================
-#  局部代价地图（跟随小车滚动的小窗口，用 odom 坐标系，负责实时避障）
-# =============================================================================
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -352,26 +161,15 @@ local_costmap:
       global_frame: odom
       robot_base_frame: base_link
       use_sim_time: True
-      rolling_window: true       # ★ 关键：跟随小车滚动，而不是覆盖整张图
-      # ★ 改动 5：窗口 3x3 → 4x4
+      rolling_window: true
       width: 4
       height: 4
       resolution: 0.05
-      # 机器人半径：车体 0.30x0.24，外接圆半径 = sqrt(0.15²+0.12²) ≈ 0.192
-      # ★ 实测教训：这里取 0.20（贴合真实外接圆）反而更差 ——
-      #   致命区变小后，DWB 会"敢于"贴着障碍挤过去，结果更容易卡死。
-      #   取 0.22（比外接圆大 3cm）能让它自动保持安全距离，成功率高得多。
-      # ★ Gazebo Sim 专用：用真实矩形轮廓，而不是外接圆半径。
-      #   车体 0.30(长) x 0.24(宽)，半长 0.15、半宽 0.12。
-      #   Nav2 会据此算出内切半径 0.12m（决定 INSCRIBED 带有多宽）
-      #   和外接半径 0.192m（用于碰撞检查），比原来一律用 0.22 精确得多。
       footprint: "[[0.15, 0.12], [0.15, -0.12], [-0.15, -0.12], [-0.15, 0.12]]"
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        # ★ 实测教训：0.28 比 0.35 差。膨胀半径决定"代价梯度"铺多远，
-        #   太小会让贴墙区域显得很"便宜"，DWB 就爱往边上蹭。
         inflation_radius: 0.35
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
@@ -386,18 +184,14 @@ local_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 2.0
-          clearing: True         # 雷达扫过且没打到的格子 → 清成空闲
-          marking: True          # 雷达打到的格子 → 标成障碍
+          clearing: True
+          marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 12.0    # 匹配雷达量程
+          raytrace_max_range: 12.0
           raytrace_min_range: 0.0
           obstacle_max_range: 6.0
           obstacle_min_range: 0.0
       always_send_full_costmap: True
-
-# =============================================================================
-#  全局代价地图（覆盖整张地图，用 map 坐标系，负责全局规划）
-# =============================================================================
 global_costmap:
   global_costmap:
     ros__parameters:
@@ -406,61 +200,22 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: True
-      # ★ 实测教训：保持 0.22（比外接圆 0.192 大 3cm），理由同局部代价地图
-      # ★ Gazebo Sim 专用：用真实矩形轮廓，而不是外接圆半径。
-      #   车体 0.30(长) x 0.24(宽)，半长 0.15、半宽 0.12。
-      #   Nav2 会据此算出内切半径 0.12m（决定 INSCRIBED 带有多宽）
-      #   和外接半径 0.192m（用于碰撞检查），比原来一律用 0.22 精确得多。
       footprint: "[[0.15, 0.12], [0.15, -0.12], [-0.15, -0.12], [-0.15, 0.12]]"
       resolution: 0.05
       track_unknown_space: true
-      # ★ 实测教训：全局代价地图**不要**接雷达（去掉 obstacle_layer）。
-      #   原因：雷达点要靠 AMCL 的位姿投影到 map 坐标系。AMCL 只要有几厘米漂移，
-      #   同一面墙的点就会被打到地图上稍微不同的位置，**越积越多假障碍**，
-      #   最后连"从车当前位置出发"都算不出路径
-      #   （实测报错：GridBased failed to generate a valid path to (-2,-2)）。
-      #
-      #   为什么去掉是合理的：
-      #     1) 本环境是**静态**的，所有障碍都已在题目(3) 建好的地图里，
-      #        静态层已经完整表达了世界；
-      #     2) "遇到地图上没有的障碍要躲开"这件事由**局部代价地图 + DWB** 负责，
-      #        局部地图用 odom 坐标系、雷达实时投影，不依赖 AMCL，反应快且不漂；
-      #     3) 这也是"已知地图导航"的标准做法。
-      #
-      #   保留下面这段 obstacle_layer 配置以便需要时启用（比如环境里有移动障碍）。
       plugins: ["static_layer", "inflation_layer"]
-      # obstacle_layer:
-      #   plugin: "nav2_costmap_2d::ObstacleLayer"
-      #   enabled: True
-      #   observation_sources: scan
-      #   scan:
-      #     topic: /scan
-      #     max_obstacle_height: 2.0
-      #     clearing: True
-      #     marking: True
-      #     data_type: "LaserScan"
-      #     raytrace_max_range: 12.0
-      #     raytrace_min_range: 0.0
-      #     obstacle_max_range: 6.0
-      #     obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        # ★ 实测教训：保持 0.35（0.28 实测更差）
         inflation_radius: 0.35
       always_send_full_costmap: True
-
-# =============================================================================
-#  map_server：提供题目(3) 建好的静态地图（launch 里用 map:= 覆盖路径）
-# =============================================================================
 map_server:
   ros__parameters:
     use_sim_time: True
     yaml_filename: ""
-
 map_saver:
   ros__parameters:
     use_sim_time: True
@@ -468,33 +223,6 @@ map_saver:
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
     map_subscribe_transient_local: True
-
-# =============================================================================
-#  规划层 ②：planner_server —— 全局路径规划
-# =============================================================================
-#  ★ 实测后从 NavFn 换成了 SmacPlanner2D ★
-#
-#  【为什么换】
-#    NavFn 是 Nav2 里最老的规划器（Dijkstra/A* 在代价栅格上搜）。
-#    在 Gazebo Sim 版上它一直报 "failed to generate a valid path"，
-#    但我把代价地图读出来**自己做了洪泛填充验证**：
-#        阻挡格 0 个、从起点可达 100% 的空闲格、每个目标点都是代价 0~99 且可达。
-#    也就是说**地图连通性完美，路明明存在**，NavFn 就是算不出来。
-#
-#    SmacPlanner2D 是 Nav2 现在的默认规划器（现代 A* 实现），
-#    对代价地图的各种边界情况鲁棒得多，参数也更好理解。
-#    它是**模板化的 A***：在栅格上搜，支持多分辨率降采样加速。
-#
-#  【每个参数在说什么】
-#    tolerance                     目标容差：距目标多近算到（米）
-#    allow_unknown                 允许穿过"未知"区域（地图边缘的灰格）
-#    downsample_costmap            是否降采样代价地图来加速（小场地不需要）
-#    max_iterations                最多扩展多少个节点（防死循环）
-#    max_on_approach_iterations    接近目标后最多再迭代多少次
-#    max_planning_time             单次规划时间上限（秒），超时就失败
-#    cost_travel_multiplier        对"高代价格"的惩罚倍率，越大越爱绕开障碍
-#    use_final_approach_orientation  是否要求到达时的朝向
-# =============================================================================
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
@@ -511,10 +239,6 @@ planner_server:
       max_planning_time: 5.0
       cost_travel_multiplier: 2.0
       use_final_approach_orientation: false
-
-# =============================================================================
-#  路径平滑器：把规划的折线变成可跟踪的曲线（对应题目(2) 的样条平滑）
-# =============================================================================
 smoother_server:
   ros__parameters:
     use_sim_time: True
@@ -524,10 +248,6 @@ smoother_server:
       tolerance: 1.0e-10
       max_its: 1000
       do_refinement: True
-
-# =============================================================================
-#  恢复行为：卡住时做什么（原地转圈找路 / 后退 / 等待）
-# =============================================================================
 behavior_server:
   ros__parameters:
     costmap_topic: local_costmap/costmap_raw
@@ -552,11 +272,9 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-
 robot_state_publisher:
   ros__parameters:
     use_sim_time: True
-
 waypoint_follower:
   ros__parameters:
     use_sim_time: True
@@ -567,17 +285,12 @@ waypoint_follower:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: True
       waypoint_pause_duration: 200
-
-# =============================================================================
-#  速度平滑器：把 DWB 输出的速度再做一次加速度限制，让底盘动作更柔和
-# =============================================================================
 velocity_smoother:
   ros__parameters:
     use_sim_time: True
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    # ★ 改动 3（配套）：速度上限同步降到 0.22
     max_velocity: [0.22, 0.0, 1.0]
     min_velocity: [-0.22, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]

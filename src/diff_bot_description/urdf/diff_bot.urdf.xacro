@@ -36,22 +36,17 @@
     </inertial>
   </xacro:macro>
 
-  <!-- ==========================================================================
-       base_footprint：车在地面的投影，固定关节连到 base_link
-       为什么要有它：SLAM / Nav2 期望机器人"脚"在地面上，z=0
-       ========================================================================== -->
+
   <link name="base_footprint"/>
 
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/>
     <child  link="base_link"/>
-    <!-- 抬高半个车高 + 半个轮径，让车体坐上轮子 -->
+
     <origin xyz="0 0 ${wheel_rad + chassis_hgt/2}" rpy="0 0 0"/>
   </joint>
 
-  <!-- ==========================================================================
-       base_link：车体
-       ========================================================================== -->
+
   <link name="base_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -65,7 +60,7 @@
     <xacro:box_inertia m="${chassis_mass}" l="${chassis_len}" w="${chassis_wid}" h="${chassis_hgt}"/>
   </link>
 
-  <!-- 一个方向标记（小红块），方便在 Gazebo/RViz 里看出车头朝向 -->
+
   <joint name="nose_joint" type="fixed">
     <parent link="base_link"/>
     <child  link="nose_link"/>
@@ -76,12 +71,11 @@
       <geometry><box size="0.03 0.06 0.03"/></geometry>
       <material name="red"/>
     </visual>
-    <!-- 必须补 collision，否则 Gazebo 会警告 "link has no collision"，
-         而且它在物理世界里会变成一个"幽灵"（能被雷达打到但不会碰撞） -->
+
     <collision>
       <geometry><box size="0.03 0.06 0.03"/></geometry>
     </collision>
-    <!-- 也必须补惯性，否则 Gazebo 会用默认质量，行为不可预期 -->
+
     <xacro:box_inertia m="0.02" l="0.03" w="0.06" h="0.03"/>
   </link>
   <xacro:macro name="drive_wheel" params="prefix y_sign color">
@@ -239,7 +233,7 @@
       <plugin filename="libgazebo_ros_ray_sensor.so" name="laser_controller">
         <ros>
           <namespace>/</namespace>
-          <!-- 输出 LaserScan 到 /scan —— 建图和 Nav2 默认就找这个话题 -->
+
           <remapping>~/out:=scan</remapping>
         </ros>
         <output_type>sensor_msgs/LaserScan</output_type>

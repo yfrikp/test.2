@@ -1,33 +1,9 @@
 <?xml version="1.0" ?>
-<!-- ==========================================================================
-     test.2.fixed.world —— 修正版（对照用，不是让你直接抄）
 
-     原文件 test.2 里有 11 处笔误，导致 XML 语法错误 →
-     VS Code 把标签名标红。
-
-     这份修正版按你的原文结构补齐并改正，逐处修改见下表：
-
-     【语法错误（会导致解析直接失败）】
-       第 4 行  "default_physics"default="0"  → 属性之间**必须有空格**
-       第 4 行  type="obe"                    → 应为 "ode"
-       第 9 行  <type>quick<type>             → 结束标签少了个 /
-       第 9 行  <iters></iters>               → 空标签，应填数字
-       第 10 行 <constrains>                  → 应为 <constraints>
-       第 12 行 <comtact_...>                 → 开标签拼错，且和闭标签不一致
-       第 13 行 </contact_max_corerecting_vel>→ 闭标签名字写错，还拼错了
-       第 22 行 <>                            → 这不是合法标签
-
-     【拼写错误（语法能过，但 Gazebo 会找不到东西）】
-       第 17 行 model://sum                   → 应为 model://sun（阳光）
-
-     【结构缺失】
-       point_A 少了 <link> 和 </model>，整个文件也没闭合
-       <ode> / <constraints> 的缩进乱了，但标签配对还算对
-     ========================================================================== -->
 <sdf version="1.6">
   <world name="my_own_map">
 
-    <!-- ========== 物理引擎参数 ========== -->
+
     <physics name="default_physics" default="0" type="ode">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
@@ -47,13 +23,13 @@
       </ode>
     </physics>
 
-    <!-- ========== 光照 ========== -->
+
     <include><uri>model://sun</uri></include>
 
-    <!-- ========== 地面 ========== -->
+
     <include><uri>model://ground_plane</uri></include>
 
-    <!-- ========== A 点标记（绿色，故意不写 collision）========== -->
+
     <model name="point_A">
       <static>true</static>
       <pose>-2.0 -2.0 0.5 0 0 0</pose>
@@ -70,7 +46,7 @@
       </link>
     </model>
 
-    <!-- ========== B 点标记（红色）========== -->
+
     <model name="point_B">
       <static>true</static>
       <pose>2.0 2.0 0.5 0 0 0</pose>
@@ -87,7 +63,7 @@
       </link>
     </model>
 
-    <!-- ========== 中间的方形挡墙（挡住 A→B 直线）========== -->
+
     <model name="center_block">
       <static>true</static>
       <pose>0.0 0.0 0.3 0 0 0.6</pose>
@@ -101,7 +77,7 @@
       </link>
     </model>
 
-    <!-- ========== 四角的圆柱 ========== -->
+
     <model name="corner_c1">
       <static>true</static>
       <pose>-1.2 1.2 0.4 0 0 0</pose>
@@ -154,7 +130,7 @@
       </link>
     </model>
 
-    <!-- ========== 四面围墙 ========== -->
+
     <model name="wall_north">
       <static>true</static>
       <pose>0.0 3.2 0.4 0 0 0</pose>

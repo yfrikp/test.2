@@ -7,7 +7,7 @@
   <maintainer email="lenovo@example.com">lenovo</maintainer>
   <license>MIT</license>
 
-  <!-- 依赖声明：colcon 会检查这些包在不在，缺了会警告 -->
+
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
@@ -19,7 +19,7 @@
   <test_depend>python3-pytest</test_depend>
 
   <export>
-    <!-- ★ 这一行告诉 colcon "这是纯 Python 包"，用 setup.py 构建 -->
+
     <build_type>ament_python</build_type>
   </export>
 </package>

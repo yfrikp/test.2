@@ -1,12 +1,3 @@
-# =============================================================================
-#  diff_bot.rviz —— RViz2 配置
-#
-#  为什么需要它：RViz 默认什么都不显示，每次都要手动 Add 一堆 Display，
-#  很浪费时间。这个配置一次性把 Sim 仿真需要的显示项都开好。
-#
-#  包含：TF / RobotModel / LaserScan / Odometry / Map / 轨迹
-#  用法：rviz2 -d <这个文件>   （launch 文件里已经自动带上）
-# =============================================================================
 Panels:
   - Class: rviz_common/Displays
     Name: Displays
@@ -23,7 +14,6 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    # ---- 全局选项：仿真里必须开 use_sim_time，否则 TF 时间戳对不上 ----
     - Class: rviz_default_plugins/Grid
       Name: Grid
       Enabled: true
@@ -32,7 +22,6 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
-
     - Class: rviz_default_plugins/TF
       Name: TF
       Enabled: true
@@ -41,7 +30,6 @@ Visualization Manager:
       Show Arrows: false
       Marker Scale: 0.4
       Frame Timeout: 15
-
     - Class: rviz_default_plugins/RobotModel
       Name: RobotModel
       Enabled: true
@@ -49,8 +37,6 @@ Visualization Manager:
         Value: /robot_description
       Visual Enabled: true
       Collision Enabled: false
-
-    # ---- 雷达：建图和避障都靠它 ----
     - Class: rviz_default_plugins/LaserScan
       Name: LaserScan
       Enabled: true
@@ -62,8 +48,6 @@ Visualization Manager:
       Color: 255; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
-
-    # ---- 里程计：题目2(2) 跟踪轨迹时要看它 ----
     - Class: rviz_default_plugins/Odometry
       Name: Odometry
       Enabled: true
@@ -79,8 +63,6 @@ Visualization Manager:
         Value: false
       Position Tolerance: 0.05
       Angle Tolerance: 0.1
-
-    # ---- 地图：题目2(3) 建图 / 附加题导航用 ----
     - Class: rviz_default_plugins/Map
       Name: Map
       Enabled: true
@@ -92,8 +74,6 @@ Visualization Manager:
       Alpha: 0.7
       Update Topic:
         Value: /map_updates
-
-    # ---- 规划出来的路径 ----
     - Class: rviz_default_plugins/Path
       Name: PlannedPath
       Enabled: true
@@ -102,23 +82,16 @@ Visualization Manager:
       Color: 0; 255; 0
       Line Style: Lines
       Line Width: 0.03
-
   Global Options:
-    # fixed frame 用 odom 还是 map 取决于任务：
-    #   题目2(1)(2)：用 odom（局部，不依赖建图）
-    #   题目2(3) 附加题：改成 map（全局，配合 AMCL 定位）
     Fixed Frame: odom
     Background Color: 48; 48; 48
     Frame Rate: 30
-
   Tools:
     - Class: rviz_default_plugins/MoveCamera
     - Class: rviz_default_plugins/Select
-    # 附加题要用这个在 RViz 里点目标点（发 /goal_pose）
     - Class: rviz_default_plugins/SetGoal
       Topic:
         Value: /goal_pose
-
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
@@ -131,7 +104,6 @@ Visualization Manager:
       Pitch: 0.7
       Yaw: 0.0
       Target Frame: <Fixed Frame>
-
 Window Geometry:
   Height: 900
   Width: 1400
