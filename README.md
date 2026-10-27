@@ -1,6 +1,6 @@
 # 题目二：ROS2 + Gazebo Sim 差速小车（建模 / 规划 / 建图 / 导航）
 
-**姓名**：`<在这里填你的名字>`
+**姓名**：`姚锦辉`
 **运行环境**：ROS2 Humble + Ubuntu 22.04.5 LTS + Gazebo Sim (Fortress)
 
 ---
