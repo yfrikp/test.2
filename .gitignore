@@ -1,27 +1,16 @@
-# ROS2 / colcon 构建产物（自动生成，不需要提交）
 build/
 install/
 log/
-
-# Python 缓存
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Python 虚拟环境
-.venv/
-venv/
-
-# 编辑器
-.vscode/
-.idea/
-*.swp
-*~
-
-# 操作系统
-.DS_Store
-Thumbs.db
-
-# 仿真日志与临时文件
+*.pyc
 *.log
-*.csv.bak
+!docs/evidence/*.log
+
+# 题目1 的内容不放进题目2 的仓库（题目1 在另一个仓库：test.1）
+src/vision_task1/
+src/vision_task1_interfaces/
+src/vision_task1_sim/
+models/yolo11n.pt
+weights/
+runs/
+datasets/

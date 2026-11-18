@@ -1,0 +1,107 @@
+[INFO] [launch]: All log files can be found below /home/lenovo/.ros/log/2026-11-18-14-50-41-913665-LAPTOP-L8H2LQN7-3989
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [robot_state_publisher-1]: process started with pid [3991]
+[INFO] [ign gazebo-2]: process started with pid [3993]
+[INFO] [parameter_bridge-3]: process started with pid [3995]
+[INFO] [parameter_bridge-4]: process started with pid [3997]
+[INFO] [scan_filter-5]: process started with pid [4000]
+[robot_state_publisher-1] [INFO] [1794984642.176103053] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-1] [INFO] [1794984642.176307016] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-1] [INFO] [1794984642.176333749] [robot_state_publisher]: got segment caster_link
+[robot_state_publisher-1] [INFO] [1794984642.176343793] [robot_state_publisher]: got segment laser_link
+[robot_state_publisher-1] [INFO] [1794984642.176349974] [robot_state_publisher]: got segment left_wheel_link
+[robot_state_publisher-1] [INFO] [1794984642.176355781] [robot_state_publisher]: got segment nose_link
+[robot_state_publisher-1] [INFO] [1794984642.176361376] [robot_state_publisher]: got segment right_wheel_link
+[parameter_bridge-3] [INFO] [1794984642.183725666] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1794984642.184207928] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1794984642.184517847] [ros_gz_ground_truth]: Creating GZ->ROS Bridge: [/world/obstacles/dynamic_pose/info (gz.msgs.Pose_V) -> /world/obstacles/dynamic_pose/info (tf2_msgs/msg/TFMessage)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1794984642.185114702] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom (gz.msgs.Odometry) -> /odom (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1794984642.185836045] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan (gz.msgs.LaserScan) -> /scan (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1794984642.186553163] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/tf (gz.msgs.Pose_V) -> /tf (tf2_msgs/msg/TFMessage)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1794984642.187274088] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/joint_states (gz.msgs.Model) -> /joint_states (sensor_msgs/msg/JointState)] (Lazy 0)
+[scan_filter-5] [INFO] [1794984642.324440832] [scan_filter]: 雷达过滤器已启动: /scan_raw → /scan，滤除 < 0.6 m 的读数
+[scan_filter-5] [INFO] [1794984642.324648391] [scan_filter]: 同时把 frame_id 改写为 "laser_link"
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mIgnition Gazebo Server v[0m[1;32m6.18.0[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mLoading SDF world file[[0m[1;32m/home/lenovo/vision_ws/install/diff_bot_description/share/diff_bot_description/worlds/my_map_gz.sdf[0m[1;32m].[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing entity system service on [[0m[1;32m/[0m[1;32mentity/system/add[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mCreate service on [[0m[1;32m/world/obstacles/create[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mRemove service on [[0m[1;32m/world/obstacles/remove[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mPose service on [[0m[1;32m/world/obstacles/set_pose[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mPose service on [[0m[1;32m/world/obstacles/set_pose_vector[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mLight configuration service on [[0m[1;32m/world/obstacles/light_config[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mPhysics service on [[0m[1;32m/world/obstacles/set_physics[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mSphericalCoordinates service on [[0m[1;32m/world/obstacles/set_spherical_coordinates[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mEnable collision service on [[0m[1;32m/world/obstacles/enable_collision[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mDisable collision service on [[0m[1;32m/world/obstacles/disable_collision[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mMaterial service on [[0m[1;32m/world/obstacles/visual_config[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mMaterial service on [[0m[1;32m/world/obstacles/wheel_slip[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mLoaded level [[0m[1;32m3[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing world controls on [[0m[1;32m/world/obstacles[0m[1;32m/control], [[0m[1;32m/world/obstacles[0m[1;32m/control/state] and [[0m[1;32m/world/obstacles[0m[1;32m/playback/control][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing GUI information on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mgui/info[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mWorld [[0m[1;32mobstacles[0m[1;32m] initialized with [[0m[1;32m1ms[0m[1;32m] physics profile.[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing world SDF generation service on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mgenerate_world_sdf[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing world names on [[0m[1;32m/gazebo/worlds[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mResource path add service on [[0m[1;32m/gazebo/resource_paths/add[0m[1;32m].[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mResource path get service on [[0m[1;32m/gazebo/resource_paths/get[0m[1;32m].[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mResource path resolve service on [[0m[1;32m/gazebo/resource_paths/resolve[0m[1;32m].[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mResource paths published on [[0m[1;32m/gazebo/resource_paths[0m[1;32m].[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServer control service on [[0m[1;32m/server_control[0m[1;32m].[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mFound no publishers on /stats, adding root stats topic[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mFound no publishers on /clock, adding root clock topic[0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing scene information on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mscene/info[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing graph information on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mscene/graph[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing full state on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mstate[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mServing full state (async) on [[0m[1;32m/world/obstacles[0m[1;32m/[0m[1;32mstate_async[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mPublishing scene information on [[0m[1;32m/world/obstacles/scene/info[0m[1;32m][0m[1;32m[0m
+[ign gazebo-2] [1;32m[Msg] [0m[1;32mPublishing entity deletions on [[0m[1;32m/world/obstacles/scene/deletion[0m[1;32m][0m[1;32m[0m
+[INFO] [create-6]: process started with pid [4077]
+[create-6] [INFO] [1794984648.509690537] [spawn_diff_bot]: Waiting messages on topic [robot_description].
+[create-6] [INFO] [1794984648.722852649] [spawn_diff_bot]: Requested creation of entity.
+[create-6] [INFO] [1794984648.722913370] [spawn_diff_bot]: OK creation of entity.
+[INFO] [create-6]: process has finished cleanly [pid 4077]
+[scan_filter-5] [INFO] [1794984649.267156158] [scan_filter]: 原始 frame_id = "diff_bot/base_footprint/laser" → 改写为 "laser_link"
+[scan_filter-5] [INFO] [1794984655.325955487] [scan_filter]: 暂未发现自反射点（共 201 帧）
+[INFO] [path_follower-7]: process started with pid [4162]
+[path_follower-7] [INFO] [1794984664.562934257] [path_follower]: 加载地图: /home/lenovo/vision_ws/install/diff_bot_description/share/diff_bot_description/worlds/my_map.world
+[path_follower-7] [INFO] [1794984664.564058236] [path_follower]: 解析到 9 个障碍 (模型 11 个，其中 9 个碰撞体)
+[path_follower-7] [INFO] [1794984664.628895632] [path_follower]: 栅格地图: 140x140 格 @ 0.05 m/格，障碍膨胀 0.25 m
+[path_follower-7] [INFO] [1794984664.632578667] [path_follower]: A* 搜到 97 个路点
+[path_follower-7] [INFO] [1794984664.635069554] [path_follower]: 简化到 14 个控制点，平滑成 325 个点
+[path_follower-7] [INFO] [1794984664.638881680] [path_follower]: 路径长度 6.172 m，最大曲率 54.454 1/m
+[path_follower-7] [INFO] [1794984664.639060231] [path_follower]: ★ 安全校验：全程距最近障碍最小 0.259 m (>0 即不碰撞)，剔除越界点 0 个
+[path_follower-7] [INFO] [1794984664.661856034] [path_follower]: 路径跟踪已启动: A(-2.0, -2.0) → B(2.0, 2.0), 前视距离 0.45 m, 速度 0.22 m/s, 控制频率 20 Hz
+[path_follower-7] [INFO] [1794984664.662101480] [path_follower]: 等待 /odom ...（Gazebo 里看到小车后就会开始走）
+[path_follower-7] [INFO] [1794984664.679011607] [path_follower]: ✔ 坐标系校验通过（模式：odom 相对出生点（已换算））：起点 (-2.00,-2.00) ≈ 出生点 (-2.00,-2.00)，偏差仅 0.000 m
+[path_follower-7] [INFO] [1794984664.679175750] [path_follower]: 开始行驶。当前位置 (-2.000, -2.000)，朝向 45.0°
+[parameter_bridge-3] [INFO] [1794984664.708021846] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[path_follower-7] [INFO] [1794984664.708138072] [path_follower]: 位置 (-2.00,-2.00) 朝向  +45.0° | v=0.18 ω=-0.23 | 距B 5.66 m | 距最近障碍 +0.851 m
+[path_follower-7] [INFO] [1794984666.758324437] [path_follower]: 位置 (-1.71,-1.82) 朝向  +17.8° | v=0.18 ω=-0.21 | 距B 5.32 m | 距最近障碍 +0.523 m
+[scan_filter-5] [INFO] [1794984667.567775048] [scan_filter]: 已滤除 3696 个自反射点（共 401 帧，本次 125 个）
+[path_follower-7] [INFO] [1794984668.808089177] [path_follower]: 位置 (-1.29,-1.75) 朝向   +8.6° | v=0.21 ω=+0.05 | 距B 4.99 m | 距最近障碍 +0.277 m
+[path_follower-7] [INFO] [1794984670.859173344] [path_follower]: 位置 (-0.91,-1.65) 朝向  +23.0° | v=0.20 ω=+0.13 | 距B 4.67 m | 距最近障碍 +0.252 m
+[path_follower-7] [INFO] [1794984672.909453850] [path_follower]: 位置 (-0.56,-1.45) 朝向  +35.3° | v=0.20 ω=+0.07 | 距B 4.29 m | 距最近障碍 +0.403 m
+[path_follower-7] [INFO] [1794984674.959338150] [path_follower]: 位置 (-0.23,-1.18) 朝向  +40.9° | v=0.21 ω=+0.03 | 距B 3.89 m | 距最近障碍 +0.690 m
+[path_follower-7] [INFO] [1794984677.009157297] [path_follower]: 位置 (+0.10,-0.88) 朝向  +42.8° | v=0.22 ω=+0.01 | 距B 3.45 m | 距最近障碍 +0.635 m
+[scan_filter-5] [INFO] [1794984677.616909560] [scan_filter]: 已滤除 15638 个自反射点（共 602 帧，本次 0 个）
+[path_follower-7] [INFO] [1794984679.059693375] [path_follower]: 位置 (+0.42,-0.58) 朝向  +43.6° | v=0.22 ω=+0.01 | 距B 3.02 m | 距最近障碍 +0.567 m
+[path_follower-7] [INFO] [1794984681.109856260] [path_follower]: 位置 (+0.75,-0.27) 朝向  +44.3° | v=0.22 ω=+0.01 | 距B 2.59 m | 距最近障碍 +0.492 m
+[path_follower-7] [INFO] [1794984683.159374398] [path_follower]: 位置 (+1.06,+0.05) 朝向  +45.6° | v=0.22 ω=+0.01 | 距B 2.17 m | 距最近障碍 +0.458 m
+[path_follower-7] [INFO] [1794984685.209245487] [path_follower]: 位置 (+1.37,+0.37) 朝向  +47.6° | v=0.22 ω=+0.02 | 距B 1.75 m | 距最近障碍 +0.567 m
+[path_follower-7] [INFO] [1794984687.259583029] [path_follower]: 位置 (+1.65,+0.70) 朝向  +51.4° | v=0.21 ω=+0.04 | 距B 1.35 m | 距最近障碍 +0.395 m
+[scan_filter-5] [INFO] [1794984687.619186766] [scan_filter]: 已滤除 22471 个自反射点（共 802 帧，本次 87 个）
+[path_follower-7] [INFO] [1794984689.309225175] [path_follower]: 位置 (+1.89,+1.04) 朝向  +62.9° | v=0.19 ω=+0.16 | 距B 0.96 m | 距最近障碍 +0.424 m
+[path_follower-7] [INFO] [1794984691.359461949] [path_follower]: 位置 (+2.00,+1.41) 朝向  +83.5° | v=0.19 ω=+0.16 | 距B 0.59 m | 距最近障碍 +0.544 m
+[path_follower-7] [INFO] [1794984693.410923198] [path_follower]: 位置 (+2.01,+1.72) 朝向  +87.7° | v=0.10 ω=-0.01 | 距B 0.28 m | 距最近障碍 +0.684 m
+[path_follower-7] [INFO] [1794984695.111288749] [path_follower]: ============================================================
+[path_follower-7] [INFO] [1794984695.111598806] [path_follower]: ✅ 已到达 B 点
+[path_follower-7] [INFO] [1794984695.111821305] [path_follower]:    最终位置 (+2.016, +1.853)，目标 (+2.000, +2.000)
+[path_follower-7] [INFO] [1794984695.112015958] [path_follower]:    距最近障碍 +0.765 m（>0 表示全程无碰撞）
+[path_follower-7] [INFO] [1794984695.112231954] [path_follower]: ============================================================
+[scan_filter-5] [INFO] [1794984700.036552091] [scan_filter]: 已滤除 29966 个自反射点（共 1003 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984710.084529162] [scan_filter]: 已滤除 29966 个自反射点（共 1204 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984720.131898829] [scan_filter]: 已滤除 29966 个自反射点（共 1405 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984732.549186378] [scan_filter]: 已滤除 29966 个自反射点（共 1605 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984742.630498721] [scan_filter]: 已滤除 29966 个自反射点（共 1806 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984752.691883353] [scan_filter]: 已滤除 29966 个自反射点（共 2007 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984762.696511359] [scan_filter]: 已滤除 29966 个自反射点（共 2207 帧，本次 0 个）
+[scan_filter-5] [INFO] [1794984772.749159830] [scan_filter]: 已滤除 29966 个自反射点（共 2408 帧，本次 0 个）

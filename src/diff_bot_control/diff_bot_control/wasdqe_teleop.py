@@ -6,7 +6,7 @@ import tty
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
-BANNER = '\n╔══════════════════════════════════════════════════════════════════╗\n║           WASDQE 小车遥控  (题目 1)                              ║\n╠══════════════════════════════════════════════════════════════════╣\n║   W 前进      S 后退                                             ║\n║   A 左转      D 右转          （边走边转，像汽车打方向）          ║\n║   Q 原地左转  E 原地右转      （只转不走）                        ║\n║                                                                  ║\n║   空格 急停          + / - 加减速        1 2 3 速度档位          ║\n║   H 帮助             Ctrl+C 退出                                 ║\n╚══════════════════════════════════════════════════════════════════╝\n\n  ※ 终端不会告诉你"按键松开了"，所以速度是"锁定"的：\n    按 W 之后会一直前进，直到你按空格或 S 或 Q/E。\n    这是所有 ROS2 遥控程序的通用做法（包括官方的 teleop_twist_keyboard）。\n'
+BANNER = '\n╔══════════════════════════════════════════════════════════════════╗\n║           WASDQE 小车遥控  (题目 2-1)                              ║\n╠══════════════════════════════════════════════════════════════════╣\n║   W 前进      S 后退                                             ║\n║   A 左转      D 右转          （边走边转，像汽车打方向）          ║\n║   Q 原地左转  E 原地右转      （只转不走）                        ║\n║                                                                  ║\n║   空格 急停          + / - 加减速        1 2 3 速度档位          ║\n║   H 帮助             Ctrl+C 退出                                 ║\n╚══════════════════════════════════════════════════════════════════╝\n\n  ※ 终端不会告诉你"按键松开了"，所以速度是"锁定"的：\n    按 W 之后会一直前进，直到你按空格或 S 或 Q/E。\n    这是所有 ROS2 遥控程序的通用做法（包括官方的 teleop_twist_keyboard）。\n'
 
 class WasdqeTeleop(Node):
     SPEED_PRESETS = [(0.12, 0.5, 0.7), (0.25, 1.0, 1.4), (0.45, 1.8, 2.4)]
@@ -17,15 +17,19 @@ class WasdqeTeleop(Node):
         self.declare_parameter('publish_rate', 20.0)
         self.declare_parameter('speed_scale', 1.0)
         self.declare_parameter('preset', 2)
+        # diff = 差速底盘（A/D 转向）；omni = 麦轮全向底盘（A/D 横移）
+        self.declare_parameter('mode', 'diff')
+        self.mode = str(self.get_parameter('mode').value).lower()
         topic = self.get_parameter('cmd_topic').value
         self.rate_hz = float(self.get_parameter('publish_rate').value)
         self.scale = float(self.get_parameter('speed_scale').value)
         self.preset = int(self.get_parameter('preset').value)
         self.publisher = self.create_publisher(Twist, topic, 10)
         self.linear_x = 0.0
+        self.linear_y = 0.0
         self.angular_z = 0.0
         self.timer = self.create_timer(1.0 / self.rate_hz, self.publish_cmd)
-        self.get_logger().info(f'键盘遥控已启动，发布到话题 {topic} @ {self.rate_hz:.0f} Hz')
+        self.get_logger().info(f'键盘遥控已启动，模式 {self.mode}，发布到话题 {topic} @ {self.rate_hz:.0f} Hz')
         self.print_status()
 
     def speeds(self):
@@ -39,7 +43,7 @@ class WasdqeTeleop(Node):
     def publish_cmd(self) -> None:
         msg = Twist()
         msg.linear.x = self.linear_x
-        msg.linear.y = 0.0
+        msg.linear.y = self.linear_y
         msg.linear.z = 0.0
         msg.angular.x = 0.0
         msg.angular.y = 0.0
@@ -57,17 +61,26 @@ class WasdqeTeleop(Node):
         elif key == 's':
             self.linear_x = -fwd
         elif key == 'a':
-            self.angular_z = +turn
+            if self.mode == 'omni':
+                self.linear_y = +fwd      # 全向底盘：向左横移
+            else:
+                self.angular_z = +turn
         elif key == 'd':
-            self.angular_z = -turn
+            if self.mode == 'omni':
+                self.linear_y = -fwd      # 全向底盘：向右横移
+            else:
+                self.angular_z = -turn
         elif key == 'q':
             self.linear_x = 0.0
+            self.linear_y = 0.0
             self.angular_z = +spin
         elif key == 'e':
             self.linear_x = 0.0
+            self.linear_y = 0.0
             self.angular_z = -spin
         elif key == ' ':
             self.linear_x = 0.0
+            self.linear_y = 0.0
             self.angular_z = 0.0
         elif key in ('+', '='):
             self.preset = min(3, self.preset + 1)
@@ -88,6 +101,7 @@ class WasdqeTeleop(Node):
 
     def stop(self) -> None:
         self.linear_x = 0.0
+        self.linear_y = 0.0
         self.angular_z = 0.0
         for _ in range(5):
             self.publish_cmd()
