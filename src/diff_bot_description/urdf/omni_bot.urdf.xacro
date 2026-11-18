@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <!--
   题目2（1）：四轮麦轮全向底盘 omni_bot
-  - 4 个驱动轮（前后 ±0.10 m、左右 ±0.13 m），半径 0.05 m
-  - 运动控制用 gz-sim 的 MecanumDrive 系统（支持 linear.x / linear.y / angular.z 三自由度）
-  - 轮子摩擦按 45° 各向异性设定，配合麦轮滚筒实现横移
+  - 4 个麦轮：前后 ±0.10 m、左右 ±0.13 m，半径 0.05 m
+  - MecanumDrive 按 vx/vy/wz 计算四个轮的转速，并发布 /odom 与 TF
+  - 圆柱轮在接触模型里产生不了侧向力（实测横移位移为 0），所以另加 VelocityControl
+    把 base_link 的平面速度直接置为指令值，实现运动学全向；两套系统共用同一份 cmd_vel
 -->
 <robot name="omni_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="sim" default="gz"/>
