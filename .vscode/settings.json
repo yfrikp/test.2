@@ -1,4 +1,63 @@
 {
+  "//": "题目2 工作区设置。用 VS Code 的 Remote-WSL 打开 ~/vision_ws（或工作区）时生效。",
+
   "python.defaultInterpreterPath": "/usr/bin/python3",
-  "python-envs.defaultEnvManager": "ms-python.python:system"
+  "python-envs.defaultEnvManager": "ms-python.python:system",
+
+  "//python": "让 Pylance 能补全 rclpy / nav2 / 本工作区的 Python 包",
+  "python.analysis.extraPaths": [
+    "/opt/ros/humble/local/lib/python3.10/dist-packages",
+    "/opt/ros/humble/lib/python3.10/site-packages",
+    "${workspaceFolder}/install/diff_bot_control/lib/python3.10/site-packages"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none"
+  },
+
+  "files.associations": {
+    "*.xacro": "xml",
+    "*.world": "xml",
+    "*.sdf": "xml",
+    "*.urdf": "xml",
+    "*.msg": "plaintext",
+    "*.launch.py": "python",
+    "*.rviz": "json"
+  },
+
+  "//files.exclude": "编译产物不显示，侧边栏只留源码",
+  "files.exclude": {
+    "**/build": true,
+    "**/install": true,
+    "**/log": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "search.exclude": {
+    "**/build": true,
+    "**/install": true,
+    "**/log": true
+  },
+  "files.watcherExclude": {
+    "**/build/**": true,
+    "**/install/**": true,
+    "**/log/**": true
+  },
+
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.includePath": [
+    "/opt/ros/humble/include/**",
+    "${workspaceFolder}/src/**",
+    "${workspaceFolder}/install/**/include/**"
+  ],
+
+  "editor.rulers": [100],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "files.encoding": "utf8",
+  "files.trimTrailingWhitespace": true,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "explorer.compactFolders": false,
+
+  "//cmake": "colcon 自己管 CMake，别让 CMake Tools 抢着配置",
+  "cmake.configureOnOpen": false
 }
